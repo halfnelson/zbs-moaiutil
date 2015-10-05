@@ -4,10 +4,9 @@
 ----------------------------------------------------------------------------
 
 -- Load the wxLua module, does nothing if running from wxLua, wxLuaFreeze, or wxLuaEdit
-package.cpath = package.cpath..";./?.dll;./?.so;../lib/?.so;../lib/vc_dll/?.dll;../lib/bcc_dll/?.dll;../lib/mingw_dll/?.dll;"
-require("wx")
+local function GetUI()
 
-UI = {}
+local UI = {}
 
 
 -- create MoaiUtilConfig
@@ -73,5 +72,7 @@ UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Conf
 	
 	UI.MoaiUtilConfig:Centre( wx.wxBOTH )
 
-
+  return UI
+end
+return GetUI
 --wx.wxGetApp():MainLoop()

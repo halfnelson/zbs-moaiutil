@@ -1,11 +1,8 @@
 
-package.path =  package.path .. ';packages/zbs-moaiutil/lib/?.lua'
+package.path =  package.path .. ';packages/zbs-moaiutil/?.lua'
 --local ProjectManager = require("packages.zbs-moaiutil.lib.texturepackerproject")
 
-
-
 local Plugin = {}
-
 
 local function hasVisualStudio() 
   return os.getenv("VS120COMNTOOLS") and true or false
@@ -111,7 +108,6 @@ function Plugin:loadGlobalConfig()
   self.config = overrideConfig(defaultConfig(), config or {}) 
 end
 
-
 function Plugin:saveGlobalConfig()
   local f = wx.wxFileName.DirName("cfg")
   f:SetFullName("zbs-moaiutil-config.lua")
@@ -123,22 +119,44 @@ local ID_MOAIUTILNEWPROJECT = ID("ID_MOAIUTILNEWPROJECT")
 local ID_MOAIUTIL_PROJECT_CONFIG = ID("ID_MOAIUTIL_PROJECT_CONFIG")
 
 
-function Plugin:hasConfig()
-  local f = wx.wxFileName.DirName(self.projectDir)
-  f:SetFullName("hostconfig.lua")
-  return f:FileExists()
+function Plugin:hasMoaiSdk()
+  return self.config.moaiSdk and self.config.moaiSdk ~= "" and wx.wxDir.Exists(self.config.moaiSdk)
 end
 
+
 function Plugin:refreshMenu()
-  local menucaption = self:hasConfig() and "Initialize Project..." or "Configure Project..."
+  local menucaption = self.project:hasConfig() and "Configure Project..." or "Initialize Project..."
   self.mainMenu:SetLabel(ID_MOAIUTIL_PROJECT_CONFIG,menucaption)
+  
+  self.mainMenu:Enable(ID_MOAIUTILNEWPROJECT, self:hasMoaiSdk())
+  self.mainMenu:Enable(ID_MOAIUTIL_PROJECT_CONFIG, self:hasMoaiSdk())
 end
 
 
 function Plugin:onProjectLoad(projdir) 
-  self.projectDir = projdir
+  self.project = require("moaiproject")(projdir,self.config)
   self:refreshMenu()
 end
+
+function Plugin:editGlobalConfig()
+   local dlg = require("sdkconfig")(self.config)
+   local newconfig = dlg:getConfig()
+   if newconfig then
+     for k,v in pairs(newconfig) do
+       self.config[k] = v
+     end
+     self:saveGlobalConfig()
+     self:refreshMenu()
+   end
+end    
+
+function Plugin:editProjectConfig()
+  if not self.project:hasConfig() then
+    self.project:initialize()
+  end
+  self.project:editConfig()
+end
+
 
 function Plugin:addMainMenu()
   local menubar = ide:GetMenuBar()
@@ -151,17 +169,21 @@ function Plugin:addMainMenu()
   
   self.mainMenu = wx.wxMenu(menuOpts)
   menubar:Append(self.mainMenu, "Moai")
+  
+  self.mainMenu:Connect(ID_MOAIUTILGLOBALCONFIG, wx.wxEVT_COMMAND_MENU_SELECTED, function () 
+    self:editGlobalConfig()  
+  end)
+
+  self.mainMenu:Connect(ID_MOAIUTIL_PROJECT_CONFIG, wx.wxEVT_COMMAND_MENU_SELECTED, function()
+    self:editProjectConfig()
+  end)
+    
 end
-
-
-
 
 function Plugin:onRegister() 
   self:loadGlobalConfig()
   self:addMainMenu()
 end
-
-
 
 local plugin = {
   name = "ZBS Moai Util",
@@ -169,8 +191,8 @@ local plugin = {
   author = "David Pershouse",
   version = 0.1,
   dependencies = 1.10,
-  onRegister = function() Plugin:onRegister() end
-  
+  onRegister = function() Plugin:onRegister() end,
+  onProjectLoad = function(self, projectDir) Plugin:onProjectLoad(projectDir) end
 }
 
 return plugin
