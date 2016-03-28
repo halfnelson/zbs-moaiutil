@@ -61,7 +61,7 @@ local function propertiesBagFor(obj)
       
       local valmeta = {}
       valmeta.__newindex = function(itable, ikey, ivalue)
-        print("setting "..key.." index "..ikey.." to "..ivalue)
+        
         --get old value
         local oldval = { obj["get"..key](obj) }
         --update it
@@ -78,7 +78,7 @@ local function propertiesBagFor(obj)
   
   mt.__newindex = function(table, key, value)
     if obj["set"..key] then 
-      print("setting "..key.." to "..value)
+     
       obj["set"..key](obj, value) 
     end
   end
@@ -124,7 +124,9 @@ local function mergetables(...)
   return output
 end
 
-makeDebuggable(MOAIProp,
+makeDebuggable(MOAIAction,
+               MOAICoroutine,
+               MOAIProp,
                MOAIProp2D,
                MOAITileDeck2D)
           
@@ -146,7 +148,11 @@ end
 makeDebuggableWithProps(MOAIGrid, mergetables(propsfor(MOAIGrid), { "Tiles" }))
                
                
-
+--patch root action
+local obj = MOAIActionMgr.getRoot()
+getmetatable(obj).__properties = propsfor(MOAIAction)
+getmetatable(obj).__serialize = serialize
+obj._properties = propertiesBagFor(obj)
 
 
 

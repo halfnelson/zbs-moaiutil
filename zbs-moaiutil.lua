@@ -23,8 +23,40 @@ function findAndroidNdk()
 end
 
 function findMoaiSdk()
-  return os.getenv("MOAI_SDK") or false
+  return os.getenv("MOAI_SDK_HOME") or false
 end
+
+function os_exitcode(cmd)
+  local a,b,exitcode = os.execute(cmd)
+  return exitcode
+end
+
+
+function os_capture(cmd)
+  local f = io.popen(cmd, 'r')
+  if not f then return "" end
+  local s = f:read('*a')
+  f:close()
+  return s
+end
+
+function findPito()
+  local cmd
+  if (ide.osname == 'Windows') then
+    cmd = "where pito"
+  else
+    cmd = "which pito"
+  end
+  local res = os_exitcode(cmd)
+  if (res == 0) then
+    local osres = os_capture(cmd)
+    local path = osres:match("(%S+)"..GetPathSeparator().."bin"..GetPathSeparator().."pito")
+    return path or false
+  else
+    return false
+  end
+end
+
 
 
 function findAndroidSdk()
@@ -53,6 +85,8 @@ function findAndroidSdk()
   return false
 end
 
+
+
 local md = require("mobdebug.mobdebug")
 local function tableToLua(t)
   return md.line(t , {indent='  ', comment=false} )
@@ -75,13 +109,16 @@ local function fileWrite(fname,content)
   file:Close()
 end
 
-local function defaultConfig()
+local function defaultConfig(config)
   return {
-     androidNdkPath = findAndroidNdk(),
-     androidSdkPath = findAndroidSdk(),
-     moaiSdk = false,
+     androidNdkPath = config.androidNdkPath or findAndroidNdk(),
+     androidSdkPath = config.androidNdkPath or findAndroidSdk(),
+     moaiSdk = config.moaiSdk or findMoaiSdk(),
+     pitoHome = config.pitoHome or findPito(),
   }
 end
+
+
 
 local function overrideConfig(base, ext)
   local newSettings = {}
@@ -104,8 +141,12 @@ function Plugin:loadGlobalConfig()
       if cfgfn then
         config = cfgfn()
       end
+      self.config = defaultConfig(config or {})
+  else
+      self.config = defaultConfig({})
+      self:saveGlobalConfig() --save us from running this again and again
   end
-  self.config = overrideConfig(defaultConfig(), config or {}) 
+
 end
 
 function Plugin:saveGlobalConfig()
@@ -123,19 +164,25 @@ function Plugin:hasMoaiSdk()
   return self.config.moaiSdk and self.config.moaiSdk ~= "" and wx.wxDir.Exists(self.config.moaiSdk)
 end
 
+function Plugin:hasPito()
+  return self.config.pitoHome and self.config.pitoHome ~= "" and wx.wxDir.Exists(self.config.pitoHome)
+end
+
 
 function Plugin:refreshMenu()
   local menucaption = self.project:hasConfig() and "Configure Project..." or "Initialize Project..."
   self.mainMenu:SetLabel(ID_MOAIUTIL_PROJECT_CONFIG,menucaption)
   
-  self.mainMenu:Enable(ID_MOAIUTILNEWPROJECT, self:hasMoaiSdk())
-  self.mainMenu:Enable(ID_MOAIUTIL_PROJECT_CONFIG, self:hasMoaiSdk())
+  self.mainMenu:Enable(ID_MOAIUTILNEWPROJECT, self:hasPito())
+  self.mainMenu:Enable(ID_MOAIUTIL_PROJECT_CONFIG, self:hasPito())
 end
 
 
 function Plugin:onProjectLoad(projdir) 
   self.project = require("moaiproject")(projdir,self.config)
   self:refreshMenu()
+  
+  ProjectSetInterpreter("pito")
 end
 
 function Plugin:editGlobalConfig()
@@ -154,21 +201,46 @@ function Plugin:editProjectConfig()
   if not self.project:hasConfig() then
     self.project:initialize()
   end
-  self.project:editConfig()
+  LoadFile('hostconfig.lua')
+  --self.project:editConfig()
 end
+
+function Plugin:newProject()
+   local dlg = require("newproject")()
+   local newconfig = dlg:getValues()
+   if newconfig then
+      local fullcmd = self.config.pitoHome ..GetPathSeparator().."bin"..GetPathSeparator().."pito new-project "..newconfig.projectName.." 2>&1"
+      local oldcwd = wx.wxFileName.GetCwd()
+      wx.wxFileName.SetCwd(newconfig.projectPath)
+      local f = io.popen(fullcmd, 'r')
+      while true do
+        local s = f:read('*line')
+        if s == nil then break end
+        DisplayOutputLn(s)
+      end
+      wx.wxFileName.SetCwd(oldcwd)
+      local projectDir = newconfig.projectPath..GetPathSeparator()..newconfig.projectName
+      if wx.wxDir.Exists(projectDir) then
+        --success
+        ProjectUpdateProjectDir(projectDir)
+      end
+      
+   end
+end
+
 
 
 function Plugin:addMainMenu()
   local menubar = ide:GetMenuBar()
   local menuOpts = {
-    { ID_MOAIUTIL_PROJECT_CONFIG, TR("Initialize Project..."), TR("Configure This Project") },
+    { ID_MOAIUTIL_PROJECT_CONFIG, TR("Initialize Project..."), TR("Configure Project") },
     { },
-    { ID_MOAIUTILGLOBALCONFIG, TR("Configure Defaults..."), TR("Configure Defaults") },
-    { ID_MOAIUTILNEWPROJECT, TR("New Project..."), TR("Create a New Moai Project") },
+    { ID_MOAIUTILGLOBALCONFIG, TR("Configure Plugin..."), TR("Configure Pito Plugin") },
+    { ID_MOAIUTILNEWPROJECT, TR("New Project..."), TR("Create a New Pito Project") },
   }
   
   self.mainMenu = wx.wxMenu(menuOpts)
-  menubar:Append(self.mainMenu, "Moai")
+  menubar:Append(self.mainMenu, "Pito")
   
   self.mainMenu:Connect(ID_MOAIUTILGLOBALCONFIG, wx.wxEVT_COMMAND_MENU_SELECTED, function () 
     self:editGlobalConfig()  
@@ -178,11 +250,20 @@ function Plugin:addMainMenu()
     self:editProjectConfig()
   end)
     
+  self.mainMenu:Connect(ID_MOAIUTILNEWPROJECT, wx.wxEVT_COMMAND_MENU_SELECTED, function()
+    self:newProject()
+  end)
+    
 end
+
+
 
 function Plugin:onRegister() 
   self:loadGlobalConfig()
   self:addMainMenu()
+  --interpreter
+  local interpreter = require('pitointerpreter')(self)
+  ide:AddInterpreter("pito", interpreter)
 end
 
 local plugin = {

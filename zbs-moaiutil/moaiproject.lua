@@ -9,6 +9,13 @@ function Project:sdkPath(name)
 end
 
 
+function Project:pitoPath(name)
+  local f = wx.wxFileName.DirName(name:gsub("/",GetPathSeparator()))
+  f:MakeAbsolute(self.moaiConfig.pitoHome..GetPathSeparator())
+  return f:GetFullPath()
+end
+
+
 function Project:makeProjectRelative(name)
   local dir = wx.wxFileName.DirName(name)
   dir:MakeAbsolute(self.projectDir)
@@ -31,7 +38,7 @@ function Project:hasConfig()
 end
 
 function Project:runHostCommand(cmd)
-  local fullcmd = self:sdkPath("util").."moaiutil host "..cmd.." 2>&1"
+  local fullcmd = self:pitoPath("bin").."pito host "..cmd.." 2>&1"
   local oldcwd = wx.wxFileName.GetCwd()
   wx.wxFileName.SetCwd(self.projectDir)
   local f = io.popen(fullcmd, 'r')

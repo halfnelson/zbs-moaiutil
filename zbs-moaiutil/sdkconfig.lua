@@ -9,7 +9,7 @@ function Dialog:setupBindings()
   b:bindDirPicker("moaiSdk", ui.m_moaiSdkDir)
   b:bindDirPicker("androidNdkPath", ui.m_androidNdkDir)
   b:bindDirPicker("androidSdkPath", ui.m_androidSdkDir)
- 
+  b:bindDirPicker("pitoHome", ui.m_pitoHome)
 end
 
 function Dialog:init(config)

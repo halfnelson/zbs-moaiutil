@@ -8,16 +8,29 @@ local function GetUI()
 
 local UI = {}
 
-
 -- create MoaiUtilConfig
-UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Config", wx.wxDefaultPosition, wx.wxSize( 600,191 ), wx.wxDEFAULT_DIALOG_STYLE )
+UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Config", wx.wxDefaultPosition, wx.wxSize( 600,206 ), wx.wxDEFAULT_DIALOG_STYLE )
 	UI.MoaiUtilConfig:SetSizeHints( wx.wxDefaultSize, wx.wxDefaultSize )
 	
 	UI.bSizer1 = wx.wxBoxSizer( wx.wxVERTICAL )
 	
+	UI.bPitoDir = wx.wxBoxSizer( wx.wxHORIZONTAL )
+	
+	UI.m_staticText12 = wx.wxStaticText( UI.MoaiUtilConfig, wx.wxID_ANY, "Pito Home", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+	UI.m_staticText12:Wrap( -1 )
+	UI.m_staticText12:SetMinSize( wx.wxSize( 100,-1 ) )
+	
+	UI.bPitoDir:Add( UI.m_staticText12, 0, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
+	
+	UI.m_pitoHome = wx.wxDirPickerCtrl( UI.MoaiUtilConfig, wx.wxID_ANY, "", "Select a folder", wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxDIRP_DEFAULT_STYLE )
+	UI.bPitoDir:Add( UI.m_pitoHome, 1, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
+	
+	
+	UI.bSizer1:Add( UI.bPitoDir, 1, wx.wxEXPAND, 5 )
+	
 	UI.bSdkDir = wx.wxBoxSizer( wx.wxHORIZONTAL )
 	
-	UI.m_staticText1 = wx.wxStaticText( UI.MoaiUtilConfig, wx.wxID_ANY, "Moai SDK", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+	UI.m_staticText1 = wx.wxStaticText( UI.MoaiUtilConfig, wx.wxID_ANY, "Moai SDK Home", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
 	UI.m_staticText1:Wrap( -1 )
 	UI.m_staticText1:SetMinSize( wx.wxSize( 100,-1 ) )
 	
@@ -28,20 +41,6 @@ UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Conf
 	
 	
 	UI.bSizer1:Add( UI.bSdkDir, 1, wx.wxEXPAND, 5 )
-	
-	UI.bAndroidNdkDir = wx.wxBoxSizer( wx.wxHORIZONTAL )
-	
-	UI.m_staticText11 = wx.wxStaticText( UI.MoaiUtilConfig, wx.wxID_ANY, "Android NDK", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
-	UI.m_staticText11:Wrap( -1 )
-	UI.m_staticText11:SetMinSize( wx.wxSize( 100,-1 ) )
-	
-	UI.bAndroidNdkDir:Add( UI.m_staticText11, 0, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
-	
-	UI.m_androidNdkDir = wx.wxDirPickerCtrl( UI.MoaiUtilConfig, wx.wxID_ANY, "", "Select a folder", wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxDIRP_DEFAULT_STYLE )
-	UI.bAndroidNdkDir:Add( UI.m_androidNdkDir, 1, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
-	
-	
-	UI.bSizer1:Add( UI.bAndroidNdkDir, 1, wx.wxEXPAND, 5 )
 	
 	UI.bAndroidSdkDir = wx.wxBoxSizer( wx.wxHORIZONTAL )
 	
@@ -57,6 +56,20 @@ UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Conf
 	
 	UI.bSizer1:Add( UI.bAndroidSdkDir, 1, wx.wxEXPAND, 5 )
 	
+	UI.bAndroidNdkDir = wx.wxBoxSizer( wx.wxHORIZONTAL )
+	
+	UI.m_staticText11 = wx.wxStaticText( UI.MoaiUtilConfig, wx.wxID_ANY, "Android NDK", wx.wxDefaultPosition, wx.wxDefaultSize, 0 )
+	UI.m_staticText11:Wrap( -1 )
+	UI.m_staticText11:SetMinSize( wx.wxSize( 100,-1 ) )
+	
+	UI.bAndroidNdkDir:Add( UI.m_staticText11, 0, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
+	
+	UI.m_androidNdkDir = wx.wxDirPickerCtrl( UI.MoaiUtilConfig, wx.wxID_ANY, "", "Select a folder", wx.wxDefaultPosition, wx.wxDefaultSize, wx.wxDIRP_DEFAULT_STYLE )
+	UI.bAndroidNdkDir:Add( UI.m_androidNdkDir, 1, wx.wxALL + wx.wxALIGN_CENTER_VERTICAL, 5 )
+	
+	
+	UI.bSizer1:Add( UI.bAndroidNdkDir, 1, wx.wxEXPAND, 5 )
+	
 	UI.m_sdbSizer1 = wx.wxStdDialogButtonSizer()
 	UI.m_sdbSizer1OK = wx.wxButton( UI.MoaiUtilConfig, wx.wxID_OK, "" )
 	UI.m_sdbSizer1:AddButton( UI.m_sdbSizer1OK )
@@ -71,6 +84,9 @@ UI.MoaiUtilConfig = wx.wxDialog (wx.NULL, wx.wxID_ANY, "Moai Util - Default Conf
 	UI.MoaiUtilConfig:Layout()
 	
 	UI.MoaiUtilConfig:Centre( wx.wxBOTH )
+
+
+--wx.wxGetApp():MainLoop()
 
   return UI
 end
