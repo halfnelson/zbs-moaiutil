@@ -112,7 +112,7 @@ end
 local function defaultConfig(config)
   return {
      androidNdkPath = config.androidNdkPath or findAndroidNdk(),
-     androidSdkPath = config.androidNdkPath or findAndroidSdk(),
+     androidSdkPath = config.androidSdkPath or findAndroidSdk(),
      moaiSdk = config.moaiSdk or findMoaiSdk(),
      pitoHome = config.pitoHome or findPito(),
   }
@@ -158,6 +158,7 @@ end
 local ID_MOAIUTILGLOBALCONFIG = ID("ID_MOAIUTILGLOBALCONFIG")
 local ID_MOAIUTILNEWPROJECT = ID("ID_MOAIUTILNEWPROJECT")
 local ID_MOAIUTIL_PROJECT_CONFIG = ID("ID_MOAIUTIL_PROJECT_CONFIG")
+local ID_MOAIUTIL_RUN_ANDROID = ID("ID_MOAIUTIL_RUN_ANDROID")
 
 
 function Plugin:hasMoaiSdk()
@@ -234,6 +235,7 @@ function Plugin:addMainMenu()
   local menubar = ide:GetMenuBar()
   local menuOpts = {
     { ID_MOAIUTIL_PROJECT_CONFIG, TR("Initialize Project..."), TR("Configure Project") },
+    { ID_MOAIUTIL_RUN_ANDROID, TR("Run on Android"), TR("Run on android device") },
     { },
     { ID_MOAIUTILGLOBALCONFIG, TR("Configure Plugin..."), TR("Configure Pito Plugin") },
     { ID_MOAIUTILNEWPROJECT, TR("New Project..."), TR("Create a New Pito Project") },
@@ -253,18 +255,28 @@ function Plugin:addMainMenu()
   self.mainMenu:Connect(ID_MOAIUTILNEWPROJECT, wx.wxEVT_COMMAND_MENU_SELECTED, function()
     self:newProject()
   end)
+
+   self.mainMenu:Connect(ID_MOAIUTIL_RUN_ANDROID, wx.wxEVT_COMMAND_MENU_SELECTED, function()
+    self:runOnAndroid()
+  end)
     
 end
 
 
+function Plugin:runOnAndroid()
+  self.android.sdkPath = self.config.androidSdkPath
+  self.android:getCurrentDevice()
+end
 
 function Plugin:onRegister() 
   self:loadGlobalConfig()
   self:addMainMenu()
+  self.android = require('android')(self.config.androidSdkPath)
   --interpreter
   local interpreter = require('pitointerpreter')(self)
   ide:AddInterpreter("pito", interpreter)
 end
+
 
 local plugin = {
   name = "ZBS Moai Util",
@@ -273,6 +285,7 @@ local plugin = {
   version = 0.1,
   dependencies = 1.10,
   onRegister = function() Plugin:onRegister() end,
+  onAppClose = function() Plugin.android:closeadb() end,
   onProjectLoad = function(self, projectDir) Plugin:onProjectLoad(projectDir) end
 }
 
