@@ -69,6 +69,7 @@ function Android:getCurrentDevice()
     currentDevice = result
   end
   
+  return currentDevice
 
 end
 
@@ -116,7 +117,6 @@ function Android:closeadb()
   end
   
 end
-
 
 function Android:hasadb()
   return wx.wxFile.Exists(self:adbBin())

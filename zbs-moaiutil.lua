@@ -159,6 +159,7 @@ local ID_MOAIUTILGLOBALCONFIG = ID("ID_MOAIUTILGLOBALCONFIG")
 local ID_MOAIUTILNEWPROJECT = ID("ID_MOAIUTILNEWPROJECT")
 local ID_MOAIUTIL_PROJECT_CONFIG = ID("ID_MOAIUTIL_PROJECT_CONFIG")
 local ID_MOAIUTIL_RUN_ANDROID = ID("ID_MOAIUTIL_RUN_ANDROID")
+local ID_MOAIUTIL_RUN_DESKTOP = ID("ID_MOAIUTIL_RUN_DESKTOP")
 
 
 function Plugin:hasMoaiSdk()
@@ -235,13 +236,15 @@ function Plugin:addMainMenu()
   local menubar = ide:GetMenuBar()
   local menuOpts = {
     { ID_MOAIUTIL_PROJECT_CONFIG, TR("Initialize Project..."), TR("Configure Project") },
-    { ID_MOAIUTIL_RUN_ANDROID, TR("Run on Android"), TR("Run on android device") },
+    { ID_MOAIUTIL_RUN_DESKTOP, TR("Run on Desktop"), TR("Run on this computer"),wx.wxITEM_RADIO },
+    { ID_MOAIUTIL_RUN_ANDROID, TR("Run on Android"), TR("Run on android device"),wx.wxITEM_RADIO },
     { },
     { ID_MOAIUTILGLOBALCONFIG, TR("Configure Plugin..."), TR("Configure Pito Plugin") },
     { ID_MOAIUTILNEWPROJECT, TR("New Project..."), TR("Create a New Pito Project") },
   }
   
   self.mainMenu = wx.wxMenu(menuOpts)
+  self.mainMenu:Check(ID_MOAIUTIL_RUN_DESKTOP, true)
   menubar:Append(self.mainMenu, "Pito")
   
   self.mainMenu:Connect(ID_MOAIUTILGLOBALCONFIG, wx.wxEVT_COMMAND_MENU_SELECTED, function () 
@@ -256,17 +259,28 @@ function Plugin:addMainMenu()
     self:newProject()
   end)
 
-   self.mainMenu:Connect(ID_MOAIUTIL_RUN_ANDROID, wx.wxEVT_COMMAND_MENU_SELECTED, function()
-    self:runOnAndroid()
-  end)
+   --self.mainMenu:Connect(ID_MOAIUTIL_RUN_ANDROID, wx.wxEVT_COMMAND_MENU_SELECTED, function()
+  --  self:runOnAndroid()
+ -- end)
     
 end
 
-
 function Plugin:runOnAndroid()
-  self.android.sdkPath = self.config.androidSdkPath
-  self.android:getCurrentDevice()
+   return self.mainMenu:IsChecked(ID_MOAIUTIL_RUN_ANDROID)
 end
+
+function Plugin:runOnDesktop()
+   return self.mainMenu:IsChecked(ID_MOAIUTIL_RUN_DESKTOP)
+end
+
+function Plugin:getAndroidDevice()
+  local device = self.android:getCurrentDevice()
+  return device and device.serial or false
+end
+
+
+
+
 
 function Plugin:onRegister() 
   self:loadGlobalConfig()
@@ -286,7 +300,8 @@ local plugin = {
   dependencies = 1.10,
   onRegister = function() Plugin:onRegister() end,
   onAppClose = function() Plugin.android:closeadb() end,
-  onProjectLoad = function(self, projectDir) Plugin:onProjectLoad(projectDir) end
+  onProjectLoad = function(self, projectDir) Plugin:onProjectLoad(projectDir) end,
+  instance = Plugin
 }
 
 return plugin
