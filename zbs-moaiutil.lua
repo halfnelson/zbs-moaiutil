@@ -1,5 +1,10 @@
+--package paths
+local homepath = (ide.osname == 'Windows') and os.getenv("USERPROFILE") or os.getenv("HOME")
+local homepackages = homepath..GetPathSeparator()..'.zbstudio'..GetPathSeparator()..'packages'..GetPathSeparator()..'zbs-moaiutil'..GetPathSeparator()..'?.lua'
 
-package.path =  package.path .. ';packages/zbs-moaiutil/?.lua'
+
+
+package.path =  package.path .. ';packages/zbs-moaiutil/?.lua;'..homepackages
 --local ProjectManager = require("packages.zbs-moaiutil.lib.texturepackerproject")
 
 local Plugin = {}
@@ -203,8 +208,8 @@ function Plugin:editProjectConfig()
   if not self.project:hasConfig() then
     self.project:initialize()
   end
-  LoadFile('hostconfig.lua')
-  --self.project:editConfig()
+  
+  self.project:editConfig()
 end
 
 function Plugin:newProject()

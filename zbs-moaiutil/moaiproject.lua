@@ -33,7 +33,7 @@ end
 
 
 function Project:hasConfig()
-  DisplayOutputLn(self:makeProjectAbsolute(".").."hostconfig.lua")
+  --DisplayOutputLn("Pito projself:makeProjectAbsolute(".").."hostconfig.lua")
   return wx.wxFileName.FileExists(self:makeProjectAbsolute(".").."hostconfig.lua")
 end
 
@@ -53,7 +53,7 @@ end
 
 
 function Project:editConfig()
-  DisplayOutputLn("Edit Config")
+  LoadFile(self:makeProjectAbsolute(".").."hostconfig.lua")
 end
 
 
