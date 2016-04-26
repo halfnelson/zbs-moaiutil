@@ -27,7 +27,7 @@ function Android:listDevices()
       return
     end
     --debug output
-    if line:match("%s%*") then
+    if line:match("%s%*") or string.lower(line):match("%s*adb%s") then
       return
     end
     
