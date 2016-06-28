@@ -5,12 +5,12 @@ function pitoInterpreter(zbsmoai)
 
   local function runDesktop(self, wfilename, rundebug)
       local file = wfilename:GetFullPath()
-    
+     local srcroot = wfilename:GetPath(wx.wxPATH_GET_VOLUME + wx.wxPATH_GET_SEPARATOR)
       local apk = false
       
       if rundebug then
         -- start running the application right away
-        DebuggerAttachDefault({startwith = file,
+        DebuggerAttachDefault({startwith = file, basedir = GetPathWithSep(file),
           runstart = ide.config.debugger.runonstart ~= false})
       --require("moaidebug") -- enable userdata debugging for moai
         
@@ -73,14 +73,15 @@ function pitoInterpreter(zbsmoai)
       local zbsdebugdir
       
       if rundebug then
+        local srcroot = wfilename:GetPath(wx.wxPATH_GET_VOLUME + wx.wxPATH_GET_SEPARATOR)
         -- start running the application right away
-        DebuggerAttachDefault({startwith = file,
+        DebuggerAttachDefault({startwith = file, basedir = GetPathWithSep(file),
           runstart = ide.config.debugger.runonstart ~= false})
         --require("moaidebug") -- enable userdata debugging for moai
        
         --apk = MergeFullPath(GetPathWithSep(ide.editorFilename), "packages/zbs-moaiutil/debugapk/zbs-debug.apk") 
         --run debug instead
-        local srcroot = wfilename:GetPath(wx.wxPATH_GET_VOLUME + wx.wxPATH_GET_SEPARATOR)
+        
         file =  MergeFullPath(srcroot,"zbs-debug-main.lua")
         local code = (
         [[
